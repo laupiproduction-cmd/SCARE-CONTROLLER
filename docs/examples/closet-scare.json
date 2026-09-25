@@ -1,0 +1,47 @@
+{
+  "format": "scare-show",
+  "version": 1,
+  "name": "Screaming closet",
+  "durationMs": 6000,
+  "trigger": {
+    "inputs": [1, 2],
+    "preDelayMs": 250,
+    "cooldownMs": 3000
+  },
+  "tracks": [
+    {
+      "type": "audio",
+      "cues": [
+        { "at": 0, "play": "scream.mp3", "volume": 90 },
+        { "at": 5500, "stop": true }
+      ]
+    },
+    {
+      "type": "output",
+      "channel": 1,
+      "label": "Strobe",
+      "cues": [
+        { "at": 0, "value": 255 },
+        { "at": 1500, "value": 0 }
+      ]
+    },
+    {
+      "type": "output",
+      "channel": 2,
+      "label": "Red wash (dimmed)",
+      "cues": [
+        { "at": 200, "value": 128 },
+        { "at": 4000, "value": 0 }
+      ]
+    },
+    {
+      "type": "dmx",
+      "channel": 1,
+      "label": "Fogger",
+      "cues": [
+        { "at": 500, "value": 255 },
+        { "at": 2500, "value": 0 }
+      ]
+    }
+  ]
+}

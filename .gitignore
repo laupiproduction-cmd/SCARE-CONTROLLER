@@ -1,0 +1,12 @@
+# PlatformIO
+.pio/
+.vscode/
+
+# Editor app
+node_modules/
+dist/
+target/
+
+# OS
+.DS_Store
+Thumbs.db
