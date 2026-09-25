@@ -14,6 +14,7 @@ A standalone controller for haunted-house props and scares, meant to compete wit
   - `src/show/` – model, import/export, validation (must match the firmware parser rules), preview state; unit-tested with Vitest
   - `src/state.ts` – editor state + undo/redo; `src/components/` – timeline, sidebar, inspector
 - `docs/show-format.md` – the show.json spec. Firmware and editor both follow it; change the spec first, then the code.
+- `docs/parts-v1.md` – shopping list for the breadboard prototype (keep in sync with the hardware list below)
 
 ## Commands
 Editor (inside `editor/`): `npm install`, `npm run dev`, `npm test`, `npm run build`.
