@@ -25,6 +25,11 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
 body {
   margin: 0;
   background: var(--bg);
@@ -106,7 +111,7 @@ kbd {
 .app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
 }
 
 .toolbar {
@@ -186,9 +191,44 @@ kbd {
   padding: 7px 14px;
   border-bottom: 1px solid var(--line);
 }
-.notice button {
+.notice > button {
   border: none;
   background: transparent;
+}
+.notice-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.json-panel {
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  padding: 8px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.json-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: var(--muted);
+}
+.json-head b {
+  color: var(--text);
+}
+.json-panel textarea {
+  height: 180px;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 8px;
+  font: 12px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace;
 }
 .notice-info {
   background: #122019;
@@ -706,4 +746,31 @@ kbd {
   display: block;
   font-size: 11px;
   color: #ff9a9d;
+}
+
+/* ------------------------------------------------------------ narrow screens */
+
+@media (max-width: 900px) {
+  body {
+    overflow: auto;
+  }
+  .app {
+    height: auto;
+    min-height: 100%;
+  }
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .timeline {
+    height: 60vh;
+    order: -1;
+  }
+  .sidebar,
+  .inspector {
+    border: none;
+    overflow: visible;
+  }
+  .zoom input {
+    width: 90px;
+  }
 }

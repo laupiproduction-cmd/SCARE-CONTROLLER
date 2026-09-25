@@ -9,6 +9,8 @@ import type { Show } from "./show/types";
 import { initState, reducer, removeCue, updateCue } from "./state";
 import { usePlayback } from "./usePlayback";
 
+const PREVIEW = import.meta.env.VITE_PREVIEW === "1";
+
 function exampleShow(): Show {
   const r = parseShowJson(JSON.stringify(example));
   return r.ok ? r.show : emptyShow();
@@ -21,6 +23,10 @@ export default function App() {
   const [sounds, setSounds] = useState<Map<string, string>>(new Map());
   const [notice, setNotice] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  // In-page "discard changes?" step (browser confirm() pop-ups are unreliable).
+  const [pendingDiscard, setPendingDiscard] = useState<{ label: string; run: () => void } | null>(null);
+  // Preview builds can't download files, so Save shows the JSON instead.
+  const [jsonPanel, setJsonPanel] = useState<string | null>(null);
 
   const playback = usePlayback(show, sounds);
   const issues = useMemo(() => validateShow(show), [show]);
@@ -39,10 +45,12 @@ export default function App() {
 
   // ------------------------------------------------------------ files
 
-  const confirmDiscard = () => !state.dirty || window.confirm("Discard unsaved changes to this show?");
+  const guardDiscard = (label: string, run: () => void) => {
+    if (state.dirty) setPendingDiscard({ label, run });
+    else run();
+  };
 
   const newShow = () => {
-    if (!confirmDiscard()) return;
     playback.pause();
     playback.seek(0);
     dispatch({ type: "load", show: emptyShow() });
@@ -62,6 +70,10 @@ export default function App() {
   };
 
   const save = useCallback(() => {
+    if (PREVIEW) {
+      setJsonPanel(serializeShow(show));
+      return;
+    }
     const blob = new Blob([serializeShow(show)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -154,10 +166,11 @@ export default function App() {
         </div>
 
         <div className="group">
-          <button onClick={newShow}>New</button>
-          <button onClick={() => confirmDiscard() && fileInput.current?.click()}>Open…</button>
+          <button onClick={() => guardDiscard("start a new show", newShow)}>New</button>
+          <button onClick={() => guardDiscard("open another show", () => fileInput.current?.click())}>Open…</button>
           <button className="primary" onClick={save}>
-            Save show.json{state.dirty && <span className="dirty-dot" title="Unsaved changes" />}
+            {PREVIEW ? "Show JSON" : "Save show.json"}
+            {state.dirty && <span className="dirty-dot" title="Unsaved changes" />}
           </button>
           <input
             ref={fileInput}
@@ -212,6 +225,27 @@ export default function App() {
         </div>
       </header>
 
+      {pendingDiscard && (
+        <div className="notice notice-error">
+          <span>This show has unsaved changes. Discard them and {pendingDiscard.label}?</span>
+          <span className="notice-actions">
+            <button
+              className="primary"
+              onClick={() => {
+                const run = pendingDiscard.run;
+                setPendingDiscard(null);
+                run();
+              }}
+            >
+              Discard changes
+            </button>
+            <button onClick={() => setPendingDiscard(null)}>Keep editing</button>
+          </span>
+        </div>
+      )}
+
+      {jsonPanel !== null && <JsonPanel json={jsonPanel} onClose={() => setJsonPanel(null)} />}
+
       {notice && (
         <div className={`notice notice-${notice.kind}`}>
           {notice.text}
@@ -250,6 +284,33 @@ export default function App() {
           dispatch={dispatch}
         />
       </main>
+    </div>
+  );
+}
+
+function JsonPanel({ json, onClose }: { json: string; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const area = useRef<HTMLTextAreaElement>(null);
+  const copy = () => {
+    navigator.clipboard
+      .writeText(json)
+      .then(() => setCopied(true))
+      .catch(() => area.current?.select());
+  };
+  return (
+    <div className="json-panel">
+      <div className="json-head">
+        <span>
+          show.json · this preview can't save files, so copy the text into a file named <b>show.json</b>
+        </span>
+        <span className="notice-actions">
+          <button className="primary" onClick={copy}>
+            {copied ? "Copied" : "Copy"}
+          </button>
+          <button onClick={onClose}>Close</button>
+        </span>
+      </div>
+      <textarea ref={area} readOnly value={json} spellCheck={false} />
     </div>
   );
 }
