@@ -10,10 +10,15 @@ A standalone controller for haunted-house props and scares, meant to compete wit
   - `src/main.cpp` – board glue: pins, SD loading, triggers, `BoardHardware`
   - `include/pins.h` – pin map (single source of truth)
   - `test/test_show/` – Unity tests for parser + engine
-- `editor/` – desktop show editor (planned: Tauri + React + Vite)
+- `editor/` – show editor, Vite + React + TypeScript (runs in the browser now; Tauri wrapper later)
+  - `src/show/` – model, import/export, validation (must match the firmware parser rules), preview state; unit-tested with Vitest
+  - `src/state.ts` – editor state + undo/redo; `src/components/` – timeline, sidebar, inspector
 - `docs/show-format.md` – the show.json spec. Firmware and editor both follow it; change the spec first, then the code.
 
-## Commands (run inside `firmware/`)
+## Commands
+Editor (inside `editor/`): `npm install`, `npm run dev`, `npm test`, `npm run build`.
+
+Firmware (inside `firmware/`):
 - `pio test -e native` – run unit tests on the PC (needs a host C++ compiler)
 - `pio run -e esp32s3` – build firmware
 - `pio run -e esp32s3 -t upload` then `pio device monitor` – flash and watch the serial log
@@ -46,15 +51,17 @@ Avoid GPIO 0, 3, 45, 46 (strapping), 19/20 (USB) and 26–37 (flash/PSRAM on N8R
 - Done: show format v1, parser with validation, engine (pre-delay, cues, cooldown, emergency stop, millis rollover), 20 unit tests, main loop with SD loading, triggers, PWM outputs and status LEDs.
 - Stubbed in `main.cpp` (log to serial only): audio playback and DMX output.
 - `main.cpp` has not been compiled or run on real hardware yet.
+- Editor v0.1: timeline with audio/output/DMX tracks, click-to-add and drag cues, inspector, trigger settings, preview playback with loaded MP3s and virtual LEDs, undo/redo, open/save show.json, live validation. 11 Vitest tests.
 
 ## Next milestones
 1. Flash the board and confirm triggers, outputs and LEDs with the example show.
 2. Audio: play MP3 from SD through the MAX98357A (ESP32-audioI2S library).
 3. DMX: send the universe continuously via the RS-485 module (esp_dmx library).
-4. Editor: Tauri + React timeline that imports/exports `show.json`.
+4. Editor: wrap in Tauri (native open/save dialogs, remember last folder), then USB "send to box" once the firmware can receive shows.
 
 ## Conventions
 - Engine code stays hardware-free and gets a unit test for every behaviour change.
+- Any change to the show format touches three places: `docs/show-format.md`, the firmware parser, and `editor/src/show/io.ts` (plus tests on both sides).
 - Times are `uint32_t` milliseconds; compare with unsigned subtraction (`now - start >= x`) so millis() rollover is safe.
 - Keep this file, `pins.h` and `docs/show-format.md` in sync with the code.
 - One milestone per session; run the tests before committing.
